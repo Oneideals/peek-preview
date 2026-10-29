@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>阅读视图测试文章 · Peek</title>
+<style>body{font:16px/1.8 -apple-system,sans-serif;max-width:720px;margin:40px auto;padding:0 20px}</style>
+</head>
+<body>
+<header><nav>首页 / 技术 / 正文</nav></header>
+<article>
+<h1>一篇用来验证阅读视图的文章</h1>
+<p class="byline">作者：Peek 测试</p>
+<p>阅读视图会把网页里无关的导航、广告和侧栏都去掉，只留下正文重新排版。为了通过正文抽取的阈值，这篇文章需要足够多的文字。下面几段会反复说明一些看起来很像文章的内容，实际上它们只是测试数据。</p>
+<p>第一段用来描述背景：很多时候我们打开一个链接，只是想快速确认它是不是自己要找的那一篇。传统做法是新开一个标签页，看完再关掉，标签栏很快就挤满了。悬浮预览把这一步压缩成一次点击，看完按 Esc 就能回到原来的阅读位置。</p>
+<h2>代码与表格的样式</h2>
+<p>阅读视图会保留正文里的代码块和表格，并给它们加上适合窄浮层的样式。代码块可以横向滚动，表格也不会把浮层撑破。下面是一个简短的示例：</p>
+<pre><code>function greet(name) {
+  return 'hello, ' + name;
+}
+console.log(greet('peek'));</code></pre>
+<p>表格同样需要能横向滚动，尤其是列数较多的时候。下面这张表有三列，用来检查表头和单元格的边框是否正常：</p>
+<table>
+<thead><tr><th>功能</th><th>入口</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>悬浮预览</td><td>Shift + 点击</td><td>在当前页面上浮出内容</td></tr>
+<tr><td>阅读视图</td><td>Alt + R</td><td>抽取正文并重新排版</td></tr>
+<tr><td>沉浸模式</td><td>标题栏按钮</td><td>浮层铺满整个屏幕</td></tr>
+</tbody>
+</table>
+<p>脚注在正文里通常是一个上标数字<sup id="fnref1"><a href="#fn1">1</a></sup>，阅读视图也应该保留这种上下标关系。下面还有一段文字，用来确保正文长度超过抽取阈值，不会被判定成非文章页。</p>
+<p>最后一段做一个收尾：如果你能在浮层里看到这句话，说明正文抽取、HTML 清洗和 srcdoc 渲染这条链路都是通的。链接导航也会被拦截并通过 postMessage 交回外层处理，不会把阅读视图本身导航掉。</p>
+<hr>
+<ol><li id="fn1">这是脚注内容，用来检查脚注区域的样式。</li></ol>
+</article>
+<footer>版权所有 · 测试页脚不应该出现在阅读视图里</footer>
+</body>
+</html>

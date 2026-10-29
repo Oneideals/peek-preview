@@ -19,8 +19,18 @@
         <strong>Peek</strong>
         <span>链接悬浮预览</span>
       </div>
-      <span class="ver">0.3</span>
+      <span class="ver">0.5</span>
     </header>
+
+    <section>
+      <h2>当前页快捷操作</h2>
+      <div class="quick">
+        <button type="button" id="qSearch">搜索页标题</button>
+        <button type="button" id="qWindow">小窗打开</button>
+        <button type="button" id="qFav">收藏此页</button>
+      </div>
+      <p class="hint" id="quickHint">正在读取当前标签页…</p>
+    </section>
 
     <section>
       <h2>触发方式</h2>
@@ -52,6 +62,45 @@
     </section>
 
     <section>
+      <h2>划词工具</h2>
+      <label class="row">
+        <span>选中文字时弹出工具条<em>搜索 / 翻译</em></span>
+        <input type="checkbox" data-k="selectionTools">
+      </label>
+      <label class="row">
+        <span>拖拽选中的文字<em>拖到空白处直接搜索</em></span>
+        <input type="checkbox" data-k="selectionDrag">
+      </label>
+      <div class="row">
+        <span>搜索引擎</span>
+        <select class="sel" data-k="searchEngine" aria-label="搜索引擎">
+          <option value="google">Google</option>
+          <option value="bing">Bing</option>
+          <option value="baidu">百度</option>
+          <option value="duckduckgo">DuckDuckGo</option>
+        </select>
+      </div>
+      <div class="row">
+        <span>翻译服务</span>
+        <select class="sel" data-k="translateEngine" aria-label="翻译服务">
+          <option value="google">Google 翻译</option>
+          <option value="bing">Bing 翻译</option>
+          <option value="deepl">DeepL</option>
+        </select>
+      </div>
+      <div class="row">
+        <span>翻译成</span>
+        <select class="sel" data-k="translateTo" aria-label="翻译目标语言">
+          <option value="zh">中文</option>
+          <option value="en">英文</option>
+          <option value="ja">日文</option>
+          <option value="ko">韩文</option>
+        </select>
+      </div>
+      <p class="hint">工具条浮在选区上方；搜索和翻译结果同样在浮层里打开，嵌不进来会自动改走小窗。</p>
+    </section>
+
+    <section>
       <h2>打开方式</h2>
       <div class="seg" id="mode">
         <button type="button" data-mode="iframe">页内悬浮</button>
@@ -66,13 +115,46 @@
         <span>自动降级<em>嵌不进来就改开小窗</em></span>
         <input type="checkbox" data-k="autoRoute">
       </label>
+      <label class="row">
+        <span>新标签页转小窗<em>只处理从链接新开的标签，默认关闭</em></span>
+        <input type="checkbox" data-k="autoPopupTabs">
+      </label>
+      <p class="hint">开启后，Ctrl / Shift / 中键点击链接新开的标签页会被移进独立小窗；地址栏直接新建的标签不受影响。小窗尺寸按站点记住。</p>
+    </section>
+
+    <section>
+      <h2>AI 问答</h2>
+      <label class="row">
+        <span>启用 AI 问答<em>自带 Key，直连接口</em></span>
+        <input type="checkbox" data-k="aiEnabled">
+      </label>
+      <div id="aiBody" hidden>
+        <div class="field">
+          <span>接口地址<em>OpenAI 兼容的 Chat Completions</em></span>
+          <input class="inp" type="text" data-k="aiEndpoint" spellcheck="false" autocomplete="off"
+            placeholder="https://api.openai.com/v1/chat/completions">
+        </div>
+        <div class="field">
+          <span>模型</span>
+          <input class="inp" type="text" data-k="aiModel" spellcheck="false" autocomplete="off" placeholder="gpt-4o-mini">
+        </div>
+        <div class="field">
+          <span>API Key<em>只存在本地，可留空给本地接口</em></span>
+          <input class="inp" type="password" data-k="aiKey" autocomplete="off" placeholder="sk-…">
+        </div>
+        <div class="field">
+          <span>系统提示词<em>可选</em></span>
+          <textarea class="inp area" data-k="aiPrompt" rows="2" placeholder="留空使用内置提示词"></textarea>
+        </div>
+      </div>
+      <p class="hint">只有在你点击浮层里的“发送”时，才会把当前页面正文和问题发到你填写的接口；扩展本身不上传任何数据。</p>
     </section>
 
     <section>
       <h2>站点规则</h2>
       <div id="rules" class="rules"></div>
       <div class="rule-add">
-        <input type="text" id="ruleHost" placeholder="example.com" spellcheck="false" autocomplete="off">
+        <input type="text" id="ruleHost" placeholder="example.com 或 *.example.com" spellcheck="false" autocomplete="off">
         <select class="rule-sel" id="ruleMode" aria-label="规则类型">
           <option value="iframe">浮层</option>
           <option value="window" selected>小窗</option>
@@ -80,18 +162,22 @@
         </select>
         <button type="button" id="ruleAdd">添加</button>
       </div>
-      <p class="hint"><b>浮层</b>强制嵌入、<b>小窗</b>强制独立窗口、<b>停用</b>让点击完全交给浏览器。自动降级的站点会记成「小窗」，右键菜单也能一键停用当前网站。</p>
+      <p class="hint"><b>浮层</b>强制嵌入、<b>小窗</b>强制独立窗口、<b>停用</b>让点击完全交给浏览器。规则按主机名后缀匹配：<b>example.com</b> 连同子域生效，<b>*.example.com</b> 只算子域。自动降级会记成「小窗」，提示条上可直接撤销；右键菜单也能一键停用当前网站。</p>
     </section>
 
     <section>
       <h2>外观与行为</h2>
       <div class="row">
-        <span>默认尺寸</span>
+        <span>默认尺寸<em>没记过尺寸时使用</em></span>
         <span class="nums">
           <input type="number" data-k="width" min="360" max="1600" step="10" aria-label="宽度">
           <i>×</i>
           <input type="number" data-k="height" min="240" max="1200" step="10" aria-label="高度">
         </span>
+      </div>
+      <div class="row">
+        <span>站点尺寸<em id="sizeCount">暂无</em></span>
+        <button type="button" id="sizeClear" class="mini">清除</button>
       </div>
       <label class="row">
         <span>点击外部关闭</span>
@@ -101,12 +187,17 @@
         <span>背景变暗</span>
         <input type="checkbox" data-k="dim">
       </label>
+      <label class="row">
+        <span>背景模糊<em>模糊后面的页面，开销略高</em></span>
+        <input type="checkbox" data-k="blur">
+      </label>
       <div class="row">
         <span>主题</span>
         <div class="seg tiny" id="theme">
           <button type="button" data-theme="auto">自动</button>
           <button type="button" data-theme="light">浅色</button>
           <button type="button" data-theme="dark">深色</button>
+          <button type="button" data-theme="sepia">米色</button>
         </div>
       </div>
       <div class="row">
@@ -117,6 +208,19 @@
           <button type="button" data-max="4">4</button>
         </div>
       </div>
+    </section>
+
+    <section>
+      <h2>数据</h2>
+      <div class="row">
+        <span>配置备份<em>设置、站点规则与收藏夹</em></span>
+        <span class="io">
+          <button type="button" id="exportCfg" class="mini">导出</button>
+          <button type="button" id="importCfg" class="mini">导入</button>
+        </span>
+      </div>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+      <p class="hint" id="ioHint">导出的 JSON 包含 AI Key，请妥善保管；导入会覆盖对应设置，收藏按网址去重合并。</p>
     </section>
 
     <footer class="ft">

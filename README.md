@@ -2,14 +2,14 @@
 
 **按住 <kbd>Shift</kbd> 点链接，目标页面就在当前页浮起来。**
 
-Arc Peek 的 Chrome 开源复刻，并往前多走了五步：多个浮层并排对照、抽正文重排的阅读视图、嵌不进来时自动改走独立小窗的按站点路由、iframe 里的链接也能拦，以及一个可收藏稍后读的链接列表。
+Arc Peek 的 Chrome 开源复刻，并往前多走了十几步：多个浮层并排对照、抽正文重排的阅读视图、嵌不进来时自动改走独立小窗的按站点路由、iframe 里的链接也能拦、一个可打标签并导入导出的收藏列表、选中文字就能搜索 / 翻译的划词工具，再加上沉浸模式、带缩放和 GIF 暂停的图片查看器、按站点记忆的小窗尺寸、自带 Key 的 AI 问答，以及整套配置的导出导入。
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-5b4fd6.svg)](LICENSE)
 [![Manifest V3](https://img.shields.io/badge/manifest-v3-5b4fd6.svg)](manifest.json)
 [![Chrome 116+](https://img.shields.io/badge/chrome-116%2B-5b4fd6.svg)](https://www.google.com/chrome/)
 [![No build step](https://img.shields.io/badge/build-none-5b4fd6.svg)](#开发与调试)
 
-[English](#english) · [安装](#安装) · [使用](#使用) · [实现要点](#五个实现要点) · [路线图](#路线图) · [贡献](#贡献)
+[English](#english) · [安装](#安装) · [使用](#使用) · [界面](#界面) · [实现要点](#十个实现要点) · [路线图](#路线图) · [贡献](#贡献)
 
 ![Peek 悬浮预览](docs/screenshots/hero.png)
 
@@ -18,14 +18,22 @@ Peek 是一个 Manifest V3 扩展，没有构建步骤、没有运行时依赖�
 ## 功能
 
 - **页内浮层**：看完按 <kbd>Esc</kbd> 或点浮层外侧关掉，不留标签页。
-- **多浮层并排**：开着浮层时再 <kbd>Shift</kbd> + 点一个链接，自动左右并排。默认最多 3 个，可设 2–4 个。
-- **阅读视图**：本地运行 Mozilla Readability 抽出正文重排，去掉导航、侧栏和广告。
+- **多浮层并排**：开着浮层时再 <kbd>Shift</kbd> + 点一个链接，自动左右并排。默认最多 3 个，可设 2–4 个；<kbd>Tab</kbd> 在浮层之间跳焦点，标题栏上的 ← / → 按钮交换两个浮层的位置。
+- **阅读视图**：本地运行 Mozilla Readability 抽出正文重排，去掉导航、侧栏和广告；代码块、表格、脚注都保留，点脚注只在正文里滚动，不会把阅读视图导航走。<kbd>Alt</kbd> + <kbd>R</kbd> 随时进出。
+- **沉浸模式**：一键把浮层铺满屏幕，读长文、看视频都不被页面其余部分打扰；再按 <kbd>Esc</kbd> 先退全屏，不会误关浮层。
+- **图片查看器**：预览图片链接时不走 iframe，而是原生查看器 —— 滚轮 / 双击 / 按钮缩放（100%–800%）、拖拽平移、一键适应，GIF 还能暂停在当前帧。
+- **划词搜索 / 翻译**：选中一段文字，浮出搜索 / 翻译工具条；支持 Google、Bing、百度、DuckDuckGo，以及 Google 翻译、Bing 翻译、DeepL，结果仍旧在浮层里打开。
+- **AI 问答**：填自己的接口地址、模型和 Key，就能就着当前预览的正文追问，多轮对话带上下文。扩展不带任何内置服务、不打包 Key。
 - **四种去向**：页内浮层、右侧停靠（≈ Split View）、独立小窗（≈ Little Arc）、正式标签页。
-- **按站点路由**：登录 / 授权页直接走小窗；浮层 6 秒没加载完自动降级并记住该站点；也可以逐站强制浮层、小窗或彻底停用。
+- **按站点路由**：登录 / 授权页直接走小窗；浮层 6 秒没加载完自动降级并记住该站点；规则支持 `*.example.com` 与父域匹配，可逐站强制浮层、小窗或彻底停用，误操作能在提示条上撤销。
+- **尺寸按站点记住**：缩放过的浮层下次打开同一站点沿用原尺寸，独立小窗同理（拖动过就记住，上限各 200 个站点）。
+- **新标签自动转小窗**：可选打开后，页面里点开的链接标签直接重开成独立小窗，按站点尺寸出现。
 - **iframe 里也能拦**：`all_frames: true`，Google Docs、Notion 嵌入块、Bilibili 和各种广告 iframe 里的链接一样能预览。
-- **拖拽触发**：把链接拖到页面空白处，落点即开浮层。
-- **收藏夹**：<kbd>Ctrl</kbd>/<kbd>⌘</kbd> + 右键收藏，<kbd>Alt</kbd> + <kbd>U</kbd> 唤出，可一键导出 Markdown。
-- **零遥测**：没有埋点、没有远程请求、没有账号。
+- **拖拽触发**：把链接或选中的文字拖到页面空白处，落点即开浮层 / 直接搜索。
+- **收藏夹**：<kbd>Ctrl</kbd>/<kbd>⌘</kbd> + 右键收藏，<kbd>Alt</kbd> + <kbd>U</kbd> 唤出；每条可打最多 3 个标签并按标签筛选，支持 JSON 导入去重、导出 Markdown 与 JSON。
+- **四套主题 + 背景模糊开关**：自动 / 浅色 / 深色 / 米色，改动即时生效；不喜欢模糊可以关掉，省 GPU。
+- **配置导入导出**：一个 JSON 带走全部设置和收藏，换机、分享、试坏都好还原。
+- **零遥测**：没有埋点、没有默认远程请求、没有账号。
 
 ## 安装
 
@@ -61,22 +69,34 @@ Edge / Brave / 其他 Chromium 浏览器同理：
 | <kbd>Shift</kbd> + 点击链接 | 悬浮预览（默认唯一触发方式，其余在设置里开） |
 | <kbd>Alt</kbd> + 点击 / 中键 / 双击 / 悬停 | 可选触发方式 |
 | **把链接拖到页面空白处** | 落点即开浮层；拖的时候有「松开预览 xxx」的提示 |
+| **选中一段文字** | 选区上方浮出「搜索 / 翻译」工具条，超过 800 字不弹 |
+| **把选中的文字拖到页面空白处** | 松手直接搜索；提示为「松开搜索 xxx」 |
 | 已开着浮层时再 <kbd>Shift</kbd> + 点别的链接 | **再开一个，自动左右并排**（默认最多 3 个，可设 2–4 个） |
 | <kbd>Esc</kbd> | 关掉当前有紫色边框（焦点）的那一个 |
 | 点浮层外面 | 单个浮层：关掉它；多个浮层：全部收起；停靠状态下不关 |
 | 拖标题栏 | 移动浮层 |
-| 拖右下角 / 右边 / 下边 | 缩放，尺寸会记住 |
-| 顶部「阅读」按钮 | 抽出正文重排，去掉导航侧栏广告；再点一次回到原页面 |
+| 拖右下角 / 右边 / 下边 | 缩放，**同一站点的尺寸会记住** |
+| 顶部「阅读」按钮 / <kbd>Alt</kbd> + <kbd>R</kbd> | 抽出正文重排，去掉导航侧栏广告；再点一次回到原页面 |
+| 顶部「沉浸」按钮 | 浮层铺满屏幕；<kbd>Esc</kbd> 先退出全屏，浮层还在 |
+| 顶部 ← / → 按钮 | 和左边 / 右边的浮层交换位置（并排对照时好用） |
+| <kbd>Tab</kbd> / <kbd>Shift</kbd> + <kbd>Tab</kbd> | 在多个浮层之间切焦点，焦点只落在浮层上时才接管，页面输入框不受影响 |
+| <kbd>Alt</kbd> + <kbd>←</kbd> / <kbd>→</kbd> | 当前浮层（或阅读视图正文）里后退 / 前进 |
 | 顶部「停靠」按钮 | 吸附到右侧半屏，此时主页面仍可操作（≈ Arc 的 Split View） |
-| 顶部「小窗」按钮 | 转成独立小窗（≈ Arc 的 Little Arc） |
+| 顶部「小窗」按钮 | 转成独立小窗（≈ Arc 的 Little Arc）；拖过的尺寸按站点记住 |
 | 顶部「新标签」按钮 | 落到正式标签页，浮层关闭 |
+| 图片预览底部工具条 | − / + 按 125% 递进（100%–800%）、滚轮缩放、双击在 100% / 200% 间切、「适应」回 100%、拖拽平移、GIF 暂停 / 播放、「原图」开新标签 |
+| 顶部「AI」按钮 | 就着当前预览的正文提问，回车或 ⌘/Ctrl + 回车发送，多轮带上下文；<kbd>Esc</kbd> 先关问答面板 |
 | <kbd>Ctrl</kbd> / <kbd>⌘</kbd> + 右键点链接 | **收藏这个链接** |
-| <kbd>Alt</kbd> + <kbd>U</kbd> | 唤出收藏列表面板 |
+| <kbd>Alt</kbd> + <kbd>U</kbd> | 唤出收藏列表面板：按标签筛选、就地编辑标签（每条最多 3 个）、导入 JSON、导出 Markdown / JSON |
 | 右键链接 | 「用 Peek 悬浮预览」／「在独立小窗中打开」 |
 | 右键页面空白处 | 「查看收藏的链接」／「在此网站停用 Peek」 |
+| 工具栏面板的快捷操作 | 一键搜索当前页 / 把当前页开成小窗 / 收藏当前页 |
 | 兜底面板上「始终用窗口」 | 这个站点以后都用独立小窗打开 |
+| 提示条上的「撤销」 | 反悔刚记下的站点规则（自动降级 / 停用 / 始终用窗口） |
 
-浮层里的链接可以直接继续点，导航发生在浮层里，不会污染你的页面 —— 这是用真 iframe 换来的好处。阅读视图里的正文链接也一样，点了会再开一个浮层并排。
+浮层里的链接可以直接继续点，导航发生在浮层里，不会污染你的页面 —— 这是用真 iframe 换来的好处。阅读视图里的正文链接也一样，点了会再开一个浮层并排；而 `#脚注` 这类页内锚点只在正文里滚动，不会把阅读视图导航走。<kbd>Esc</kbd> 是分层的：先关收藏面板 → 划词工具条 → AI 面板 → 关有焦点的浮层。
+
+**键盘快捷键的边界。** 上面这些组合键由页面里的内容脚本监听，所以焦点必须在父页面或浮层自己的控件上；一旦你点进预览 iframe 内部（比如在一个跨站登录框里打字），<kbd>Tab</kbd>、<kbd>Alt</kbd> + <kbd>R</kbd> 这类组合键就轮不到扩展处理了 —— 那是浏览器的焦点规则，不是漏实现。独立小窗是真窗口，里面的原生快捷键全部照常可用。
 
 **iframe 里的链接也拦。** `all_frames: true`，所以 Google Docs、Notion 嵌入块、Bilibili、各种广告 iframe 里的链接一样能预览 —— 浮层开在那个 iframe 自己里面，尺寸跟着 iframe 的视口走。
 
@@ -88,8 +108,19 @@ Edge / Brave / 其他 Chromium 浏览器同理：
   <img src="docs/screenshots/multi.png" width="49%" alt="多个浮层并排">
   <img src="docs/screenshots/reading.png" width="49%" alt="阅读视图">
 </p>
+<p align="center">
+  <img src="docs/screenshots/image-viewer.png" width="49%" alt="图片查看器">
+  <img src="docs/screenshots/ai.png" width="49%" alt="AI 问答">
+</p>
+<p align="center">
+  <img src="docs/screenshots/favorites.png" width="73%" alt="收藏夹面板">
+</p>
 
-左：两个浮层自动等宽并排，各有独立的标题栏与导航。右：阅读视图会重新抓取网页、抽出正文重排，所以对拒绝嵌入的站点同样有效。
+第一行 左：三个浮层自动等宽并排 —— 文章、图片、iframe 各一个，互不影响，各有独立的标题栏与前进后退。右：阅读视图会重新抓取网页、抽出正文重排，所以对拒绝嵌入的站点同样有效，代码块和表格也保留下来。
+
+第二行 左：图片链接不走 iframe，直接进查看器，滚轮 / 按钮缩放、拖拽平移，GIF 还能冻住看某一帧。右：AI 问答面板开在浮层里，问题、回答和「依据的是哪一页」都在同一处，接口地址和 Key 由你自己填。
+
+第三行：收藏面板按标签筛选、就地改标签、导入导出。
 
 ## 和 Arc 的对应关系
 
@@ -112,7 +143,7 @@ Edge / Brave / 其他 Chromium 浏览器同理：
 
 | 优先级 | 判断 | 行为 |
 | --- | --- | --- |
-| 1 | 站点被记住的规则（设置里可删） | 按规则走 |
+| 1 | 站点被记住的规则（精确 > 通配 > 父域） | 按规则走 |
 | 2 | 全局设置「始终用独立小窗」 | 走小窗 |
 | 3 | URL 命中登录 / 授权启发式 | 直接走小窗，弹提示 |
 | 4 | 以上都不中 | 走页内浮层 |
@@ -124,7 +155,19 @@ Edge / Brave / 其他 Chromium 浏览器同理：
 | --- | --- |
 | `iframe` | 这个站点一律走页内浮层（连启发式都不启用） |
 | `window` | 这个站点一律走独立小窗 |
-| `off` | **彻底停用 Peek** —— 这个站点的点击完全交给浏览器，Shift、拖拽、右键全部不拦 |
+| `off` | **彻底停用 Peek** —— 这个站点的点击完全交给浏览器，Shift、拖拽、划词、右键全部不拦 |
+
+规则按主机名匹配，优先级从高到低：
+
+| 写法 | 命中范围 |
+| --- | --- |
+| `a.example.com` | 只命中这个精确主机名 |
+| `*.example.com` | 命中 `a.example.com` 等子域，**不命中**裸域 `example.com` |
+| `example.com` | 命中 `example.com` 本身及所有子域 |
+
+同一层级取后缀最长的规则；精确规则总能压过通配和父域。
+
+规则不是单向门：浮层超时自动降级、右键「在此网站停用 Peek」、兜底面板上的「始终用窗口」都会弹出带「撤销」的提示条，点一下就能恢复上一条规则。设置面板里也能把每条规则改成 `iframe` / `window` / `off`，或直接移除。
 
 「停用」是最基本的逃生门：某个网站的链接被你自己的快捷键习惯误伤时，用它一键闭嘴。右键菜单里也有「在此网站停用 Peek」。
 
@@ -134,7 +177,7 @@ Edge / Brave / 其他 Chromium 浏览器同理：
 
 > 这里**没有**做「探测浮层是否被拒」：实测确认，跨站 iframe 无论加载成功还是被 `X-Frame-Options` 拒绝，content script 读到的都是 `SecurityError`，完全无法区分；网络层虽然有 `ERR_BLOCKED_BY_RESPONSE` 能报出来，但要拿到它必须加 `webRequest` 权限（会弹出「读取您的浏览记录」警告），而 DNR 已经把 XFO/CSP 摘掉，真实收益接近零，不值得。所以走的是「补全响应头 + 超时降级」这条零权限路线。
 
-## 五个实现要点
+## 十个实现要点
 
 **1. 怎么保证「任何站点都能打开」**
 
@@ -170,25 +213,55 @@ iframe 带 `sandbox`，但**不给** `allow-top-navigation`。站点执行 `top.
 - 有任何浮层停靠 → 不关（那是分屏模式）
 - 单个浮层 → 关它；多个 → 全部收起
 
-多个浮层同时存在时会自动重排成等宽并排（`tile()`），停靠的那个不参与排列。
+多个浮层同时存在时会自动重排成等宽并排（`tile()`），停靠的那个不参与排列。背景模糊也只做在第一层遮罩上：`backdrop-filter` 糊的是「它身后已经画好的所有像素」，排在它后面的兄弟浮层不受影响，但排在它之前的浮层会被一起糊掉 —— 所以第 2、3 个浮层的遮罩只留透明，不再带模糊。
 
-**5. 阅读视图与收藏夹**
+**5. 划词工具为什么能直接复用浮层**
+
+选中的文字只在 `mouseup` 后取一次 Range 位置，工具条仍是 Shadow DOM 里的固定定位元素，滚动或点外部就收起；超过 800 字的选区不弹，避免拿整篇文章去搜索。点「搜索」/「翻译」不是另做一套预览，而是拼成目标引擎的 URL 再交给 `openPeek()` —— 多浮层并排、按站点路由、超时降级全部自动继承。拖拽选区也走同一条路径：`dragstart` 时识别到拖的是文字，落点空白处才接管；落在输入框、按钮或另一段文字上照旧。
+
+**6. 阅读视图与收藏夹**
 
 阅读视图用 `chrome.offscreen` 起一个隐藏页面（MV3 的 service worker 没有 `DOMParser`），在里面 `fetch` 原网页 → `DOMParser` 解析 → Mozilla Readability 抽正文 → 剥掉脚本、表单、`on*` 属性和 `javascript:` 链接 → 产出 HTML 交给 `iframe.srcdoc`。因为是重新抓取而不是读 iframe 内容，它对**拒绝嵌入的站点同样有效**。
 
 收藏夹存 `chrome.storage.local.favorites`（上限 400 条，超出截断）。键盘用 `e.code === 'KeyU'` 而不是 `e.key`：macOS 上按住 Option 会把 `u` 变成死键，`e.key` 会返回 `"Dead"`，绑定必失效。收藏的标题来自网页文本，所以渲染时**一律走 `textContent`**，不当 HTML 拼接 —— 否则存一个 `<img onerror=...>` 进去就是自建 XSS。
 
+**7. 阅读视图怎么不把用户带跑**
+
+产出的是一个 `srcdoc` 文档，它的基准 URL 继承自父页面，而 Readability 又会按 `<base href>` 把相对链接统统解析成绝对地址 —— 结果连 `#fn1` 这种脚注锚点都变成了「跳到 `https://site/article.html#fn1`」，一点就离开阅读视图。所以消毒前先做一步反向还原：跟原文同 `origin`、同 `pathname`、同 `search` 只带 hash 的链接，一律改回 `#hash`；再在文档里注入一小段脚本，把 `#` 开头的点击转成 `scrollIntoView`，把外链点击 `postMessage({ __peekNav })` 冒泡给父页面开成新浮层。整份正文只保留白名单标签与属性，`<script>` / `<iframe>` / `on*` / `javascript:` 全部剥掉。
+
+**8. Shadow DOM 里的全屏要问 shadow root**
+
+沉浸模式让 `.card`（在 shadow root 里）请求全屏。此时 `document.fullscreenElement` 会按事件重定向规则返回**宿主元素**，拿它跟卡片比永远不相等 —— 结果 `.immersive`、`data-immersive` 和按钮态都同步不了，看起来像「全屏了但按钮还是未激活」。判断改为两段式：先问 `shadowRoot.fullscreenElement`，再退回比对宿主。同理，`fullscreenchange` 未必冒泡到 `document`，所以每个浮层的 shadow root 上也各挂一个监听，保证用户按浏览器原生 <kbd>Esc</kbd> 退出后状态能跟上。
+
+**9. AI 问答的边界画在哪**
+
+扩展不内置任何模型、不打包 Key，接口地址 / 模型名 / Key 全部由用户自己填在 `chrome.storage.local`；面板上那个按钮默认就是隐藏的，只有开关打开才出现。点「发送」时才去取正文（读视图缓存或让 offscreen 抽一次），请求由 service worker 发出去，`Authorization` 用的是用户填的那把 Key —— 也就是说，唯一会离机的数据就是用户主动问的那个问题加当前页正文，且只发往用户自己填的地址。回答按纯文本 `textContent` 渲染，模型返回的 HTML 不会被当成标记执行。历史只保留最近 6 轮、单条截到 4000 字，超时 45 秒由 `AbortController` 兜住。导出配置时会明确提示备份文件里含 AI Key。
+
+**10. 记住尺寸与自动转小窗的成本**
+
+小窗尺寸按站点存在 `winSizes`，靠 `chrome.windows.onBoundsChanged` 落库，并做 700 ms 去抖 —— 拖动过程中该事件每帧都来，直接写就是每次拖动几百次 `storage.set`。和 `siteSizes` 一样保留 200 个站点，按最近使用淘汰。「新标签自动转小窗」默认关闭：打开后 service worker 才在 `tabs.onCreated/onUpdated` 上干活，而且只接管**由页面链接点开**的标签（要求 `openerTabId`），避免把用户自己按 <kbd>Ctrl</kbd> + <kbd>T</kbd> 出来的空标签也顺手改造掉。功能关闭时这段路径只读一次内存标志，不碰 storage。
+
 ## 隐私与权限
 
 | 权限 | 用途 |
 | --- | --- |
-| `storage` | 存设置、窗口尺寸、站点规则和收藏夹 |
+| `storage` | 存设置、站点尺寸（浮层 + 小窗）、站点规则、收藏夹和 AI 配置 |
 | `declarativeNetRequest` + `<all_urls>` | 按 tab 临时放行 iframe 响应头、阅读视图抓网页 |
 | `contextMenus` | 右键菜单 |
 | `offscreen` | 跑 Readability（需要 DOMParser） |
 | `favicon` | 浮层标题栏的站点图标（本地读取，不走第三方） |
 
-没有埋点、没有远程请求、没有账号。阅读视图虽然会重新请求目标网页，但那是你自己要去的地方。收藏夹只存在本地，不同步、不上传。
+0.5 没有新增任何权限：小窗尺寸记忆、新标签转小窗、AI 问答都复用已有的 `storage` + `<all_urls>`；`chrome.windows` / `chrome.tabs` 属于扩展 API，不需要在清单里额外声明。
+
+没有埋点、没有默认远程请求、没有账号。扩展自身的运行路径不会产生任何离机请求：阅读视图虽然会重新请求目标网页，但那是你自己要去的地方；收藏夹、站点规则、尺寸记忆和 AI 的接口地址 / Key 全部只存在本地 `chrome.storage.local`，不同步、不上传。划词搜索 / 翻译只是把你选中的文字拼进所选引擎的 URL，本地不留副本，也不会发给未选择的服务。
+
+**AI 问答是唯一会主动出网的可选功能**，而且完全由你配置：
+
+- 扩展不内置模型、不内置 Key，也没有任何默认服务端。接口地址、模型名、Key 都得你自己在设置里填，`AI 问答` 开关默认关闭。
+- 开关没打开时，浮层上的 AI 按钮直接隐藏，不会留一个占位的请求入口。
+- 点「发送」才组装请求，内容只有当前页正文（截到 16000 字）+ 你的问题 + 最近 6 轮历史，且**只发往你填的那个地址**。
+- Key 用 `Authorization: Bearer` 头带走，不落任何日志；它同样存在本地 storage，所以「导出配置」的备份文件里会包含它 —— 导出时面板会明确提醒这一点，别把备份传到公共网盘。
+- 不想用了：把开关关掉即可，扩展不会再有任何 AI 相关请求。
 
 ## 已知限制
 
@@ -201,9 +274,17 @@ iframe 带 `sandbox`，但**不给** `allow-top-navigation`。站点执行 `top.
 - 少数站点即使放开响应头也打不开：检测到 sandbox 后主动报错。这时走「小窗」或「阅读视图」。
 - **页内浮层是跨站上下文，登录态可能掉**：`SameSite=Lax` 的会话 cookie 在 iframe 里不发，Chrome 的 storage partitioning 也会把 localStorage 按顶层站点隔开。所以从 A 站 peek 到知乎、GitHub、Notion、Gmail，很可能显示成未登录 —— 这是 Arc 不会有、扩展结构上绕不开的（Arc 的 Peek 是顶层导航语义）。要么点「小窗」，要么把站点加进规则。
 - **自动降级是启发式，会误判**：`/auth`、`/login` 这类路径也可能出现在正常文档站上。误判了就进设置「站点规则」把它删掉，或者干脆把站点设成「停用」。
-- 站点规则是**精确匹配主机名**（`example.com` 不含 `a.example.com`）。
-- **拖拽触发是启发式**：只接「拖到页面空白处」。如果一个网站把自己的拖放面板做成了一个大 div，拖链接上去仍可能被 Peek 接走。真遇到了就把那个站点设成「停用」，或者关掉设置里的「拖拽链接到空白处」。
-- 收藏夹存在本地 `chrome.storage.local`，不联网、不同步，上限 400 条。
+- **尺寸记忆有上限**：浮层（`siteSizes`）和小窗（`winSizes`）各按站点保留 200 条，超出按最近使用时间淘汰；没记过的站点走全局默认（小窗 960×720，浮层用设置里的宽高）。
+- 站点规则是**主机名后缀匹配**，不是通用通配符或正则：只认最前面的 `*.`，`example.com/path`、`*foo*` 这类写法不会生效。
+- **拖拽触发是启发式**：只接「拖到页面空白处」。如果一个网站把自己的拖放面板做成了一个大 div，拖链接或文字上去仍可能被 Peek 接走。真遇到了就把那个站点设成「停用」，或者关掉设置里的「拖拽链接到空白处」。
+- **快捷键穿不透跨域 iframe**：<kbd>Tab</kbd>、<kbd>Alt</kbd> + <kbd>R</kbd>、<kbd>Alt</kbd> + <kbd>U</kbd>、<kbd>Alt</kbd> + <kbd>←</kbd>/<kbd>→</kbd> 都由父页面的内容脚本监听。一旦焦点落进预览 iframe 内部（尤其是跨源的那层），按键就归那个页面，扩展拦不到 —— 想恢复，点一下浮层标题栏或按 <kbd>Esc</kbd> 收回父页面。独立小窗是真窗口，不受这条限制。
+- **沉浸模式是「把浮层铺满屏幕」**，不是把视频从页面里抠出来：浮层里是别人的 iframe，跨源情况下无法改写它内部的播放器或遮罩元素。真要专注，用「阅读视图」重排正文，或直接走独立小窗。
+- **GIF 暂停是近似**：冻结时把当前帧画到 canvas 上盖住 `<img>`，所以暂停期间不是真解码；恢复播放靠给图片 URL 追加时间戳重新加载，会从头开始播。
+- **图片查看器只认后缀是图片的直链**（`.png` `.jpg` `.webp` `.avif` `.gif` `.svg` `.bmp` `.ico`）：像 `…/image?src=xxx` 这类看不出后缀的图片地址仍按普通网页预览走。想看原图，用查看器里的「原图」按钮。
+- **新标签自动转小窗只接管「页面里点开」的标签**：需要 `openerTabId`，所以你自己 <kbd>Ctrl</kbd> + <kbd>T</kbd> 出来的标签、以及从地址栏 / 书签打开的标签不会被改造，这是有意的。站点设成「停用」时也不转。
+- **AI 问答依赖你自己的接口**：需要 OpenAI 兼容的 `POST /chat/completions` 并允许扩展来源的跨域；填错地址只会把错误原文显示在面板里。正文是重新抓取的，所以「需要登录才看得到」的内容同样可能喂不进去。
+- **导入配置会覆盖同名设置**，并且做范围夹紧：数值越界取边界值，枚举值非法就丢弃保留原值，收藏按网址去重合并。备份文件含 AI Key，请自己保管。
+- 收藏夹存在本地 `chrome.storage.local`，不联网、不同步，上限 400 条；每条最多 3 个标签、单个标签 16 字，超出会被丢掉。
 - Chrome 不允许扩展创建完全无地址栏的窗口（需要 `panel` 类型，仅 ChromeOS 支持），所以「独立小窗」仍有一条地址栏，只是没有标签栏。
 - 全屏浏览时，页面里的固定定位元素可能不显示（浏览器行为，非本扩展问题）。
 - 只在 `http/https` 页面生效；`chrome://`、扩展商店页面是浏览器禁止注入的。
@@ -237,14 +318,14 @@ cd peek-preview && python3 -m http.server 8080
 ```
 peek-preview/
 ├── manifest.json          MV3 清单（all_frames: true）
-├── background.js          会话规则 / 右键菜单 / 小窗 / offscreen 调度
-├── content/peek.js        拦截 + 浮层 + 并排 + 阅读视图 + 按站点路由 + 拖拽 + 收藏夹
+├── background.js          会话规则 / 右键菜单 / 小窗与尺寸记忆 / 新标签转小窗 / AI 请求 / offscreen 调度
+├── content/peek.js        拦截 + 浮层 + 并排与交换 + 阅读视图 + 沉浸 + 图片查看器 + 按站点路由 + 拖拽 + 划词 + 收藏夹（带标签）
 ├── offscreen.html         Readability 运行载体（隐藏）
-├── offscreen.js           抓网页 → 抽正文 → 消毒 → 产出 HTML
+├── offscreen.js           抓网页 → 抽正文 → 锚点内化 → 消毒 → 产出 HTML
 ├── lib/Readability.min.js Mozilla Readability 0.5.0（Apache-2.0，本地内置）
-├── popup/                 设置面板
+├── popup/                 设置面板（含快捷操作、导入导出）
 ├── icons/                 16/32/48/128
-├── demo/                  测试台
+├── demo/                  测试台（含离线素材：长文章 / 图片 / 动图）
 ├── docs/screenshots/      README 截图
 ├── scripts/make_icons.py  图标生成
 ├── LICENSE
@@ -253,19 +334,31 @@ peek-preview/
 
 ## 路线图
 
-- [ ] 划词搜索 / 翻译（直接在选择上拖出小窗）
-- [ ] 按站点记住窗口尺寸，而不是全局一个尺寸
-- [ ] 站点规则支持通配符 / 子域匹配，以及「这个站点例外」的一键反悔
-- [ ] 收藏夹支持分组 / 标签，以及导入
-- [ ] 阅读视图里保留代码块 / 表格的更好排版，以及脚注还原
-- [ ] 把浮层内容喂给 AI：把当前预览的网页内容直接发给大模型提问
-- [ ] 多浮层时支持位置交换，以及 <kbd>Tab</kbd> 键在浮层之间跳转
+已完成：
+
+- [x] 划词搜索 / 翻译（选中文字浮出工具条，结果仍在浮层里打开）— 0.4
+- [x] 按站点记住浮层尺寸，而不是全局一个尺寸 — 0.4
+- [x] 站点规则支持通配符 / 子域匹配，以及规则变更的一键撤销 — 0.4
+- [x] 收藏夹支持标签与按标签筛选，以及 JSON 导入 / 导出（用标签代替死板的分组）— 0.5
+- [x] 阅读视图保留代码块 / 表格排版与脚注锚点，抽取失败给明确出口 — 0.5
+- [x] 把浮层内容喂给 AI：自带 Key、多轮追问，正文只发往你填的接口 — 0.5
+- [x] 多浮层位置交换，以及 <kbd>Tab</kbd> 在浮层之间跳焦点 — 0.5
+- [x] 沉浸模式（浮层铺满屏幕）与图片查看器（缩放 / 平移 / GIF 暂停）— 0.5
+- [x] 独立小窗按站点记尺寸，新标签可选自动转小窗 — 0.5
+- [x] 整套配置导入 / 导出、四套主题、背景模糊开关 — 0.5
+
+往后可以做的：
+
+- [ ] 钉住某个浮层持续对照（Arc 的 pin 语义，需要新的布局模式）
+- [ ] 阅读视图支持分栏与字号 / 行距调节
+- [ ] 收藏夹支持本地分组视图（现有标签之上的一层组织）
+- [ ] 把 CDP 回归脚本整理进仓库（`demo/` 测试台和它的离线素材已经在了）
 
 ## 贡献
 
 欢迎 Issue 和 PR。这个项目刻意保持「无构建、无依赖、单文件内容脚本」的形态，提交时请尽量遵守：
 
-- 在 `demo/` 测试台跑一遍 Shift 点击、并排、停靠、阅读视图、小窗和收藏夹
+- 在 `demo/` 测试台跑一遍 Shift 点击、并排与交换、停靠、阅读视图、沉浸、图片查看器、小窗、划词和收藏夹（测试台自带离线文章和图片素材，不联网也能验）
 - 不引入构建步骤和运行时依赖；需要第三方库时本地内置并补充授权说明
 - 改动 UI 时同步更新 README 截图（截图放在 `docs/screenshots/`）
 
@@ -283,16 +376,25 @@ peek-preview/
 
 Highlights:
 
-- Multiple peeks tiled side by side (default 3, configurable 2–4)
-- Reading view powered by Mozilla Readability, running locally in an offscreen document
+- Multiple peeks tiled side by side (default 3, configurable 2–4), with <kbd>Tab</kbd> focus cycling and swap buttons to reorder them
+- Reading view powered by Mozilla Readability, running locally in an offscreen document — code blocks, tables and footnote anchors survive, and in-text anchors scroll instead of navigating the view away
 - Dock to the right (Split View), open in a small standalone window (Little Arc), or promote to a tab
-- Per-site routing: auth pages go straight to a window; sites that refuse embedding fall back after 6 seconds and are remembered
+- Immersive mode: blow the peek up to fill the screen; <kbd>Esc</kbd> backs out of fullscreen first and keeps the peek
+- Built-in image viewer for direct image links: 100–800% zoom (buttons, wheel, double-click), drag to pan, fit, and pause a GIF on the current frame
+- Per-site routing: auth pages go straight to a window; sites that refuse embedding fall back after 6 seconds and are remembered. Host rules support exact hosts, `*.example.com` wildcards, and parent domains, with one-click undo
+- Select text for a search/translate toolbar (Google, Bing, Baidu, DuckDuckGo; Google/Bing Translate, DeepL), or drag selected text onto empty page space to search
+- Per-site size memory for both peeks and standalone windows (200 sites each, LRU-evicted)
+- Optional: reopen links that open a new tab directly as a Little-Arc style window
+- AI Q&A over the page you are peeking — bring your own endpoint, model and key; the button stays hidden until you turn it on, and nothing leaves your machine except to the URL you typed
+- Local favorites (<kbd>Ctrl</kbd>/<kbd>⌘</kbd> + right-click, <kbd>Alt</kbd> + <kbd>U</kbd>) with up to 3 tags each, tag filtering, JSON import with de-duplication, and Markdown/JSON export
+- Four themes (auto / light / dark / sepia), optional backdrop blur, and full settings + favorites export/import as one JSON file
 - Works inside iframes (`all_frames: true`)
 - Drag a link onto empty page space to peek at the drop point
-- Local favorites (<kbd>Ctrl</kbd>/<kbd>⌘</kbd> + right-click, <kbd>Alt</kbd> + <kbd>U</kbd>), exportable as Markdown
 - No build step, no runtime dependencies, no telemetry, no account
 
 Install: clone this repo, open `chrome://extensions`, enable Developer mode, and load the unpacked `peek-preview/` directory. Chrome 116+ is required.
+
+Honest limits: a peek is a cross-site iframe, so a logged-in site may still show you as signed out (use the window button); keyboard shortcuts cannot reach inside a cross-origin iframe once focus is there; immersive mode fills the screen with the iframe rather than extracting the player from it; and GIF pausing draws the current frame onto a canvas. The settings backup deliberately contains your AI key — keep it private.
 
 License: [MIT](LICENSE). Vendored Mozilla Readability is Apache-2.0; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 

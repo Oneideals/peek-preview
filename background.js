@@ -14,6 +14,11 @@ const DEFAULTS = {
   triggerHover: false,
   hoverDelay: 450,
   triggerDrag: true,
+  selectionTools: true,
+  selectionDrag: true,
+  searchEngine: 'google',
+  translateEngine: 'google',
+  translateTo: 'zh',
   closeOnOutside: true,
   useIframe: true,
   readingDefault: false,
@@ -22,14 +27,24 @@ const DEFAULTS = {
   height: 620,
   theme: 'auto',
   dim: true,
+  blur: true,
   autoRoute: true,
-  siteRules: {}
+  autoPopupTabs: false,
+  aiEnabled: false,
+  aiEndpoint: '',
+  aiModel: '',
+  aiKey: '',
+  aiPrompt: '',
+  siteRules: {},
+  siteSizes: {},
+  winSizes: {}
 };
 
 const MENU_PEEK = 'peek-inline';
 const MENU_WINDOW = 'peek-window';
 const MENU_FAV = 'peek-favorites';
 const MENU_DISABLE = 'peek-disable-site';
+const AI_HISTORY_MESSAGES = 12; // 6 轮对话 = 12 条 user/assistant 消息
 
 /* ---------- iframe 头放行（会话规则，按 tab 隔离） ---------- */
 
@@ -96,10 +111,88 @@ function scheduleRelease(tabId) {
 
 /* ---------- 小窗 ---------- */
 
+const WIN_SIZE_LIMIT = 200;
+const trackedPopups = new Map();
+
+function hostKeyOf(url) {
+  try {
+    return new URL(url).hostname.toLowerCase().replace(/^www\./, '');
+  } catch (e) {
+    return '';
+  }
+}
+
+function clampSize(w, h) {
+  return {
+    w: Math.round(Math.min(Math.max(Number(w) || 960, 320), 2400)),
+    h: Math.round(Math.min(Math.max(Number(h) || 720, 240), 1600))
+  };
+}
+
+function popupSizeFor(winSizes, url) {
+  const host = hostKeyOf(url);
+  const s = host && winSizes && typeof winSizes === 'object' ? winSizes[host] : null;
+  if (s && Number.isFinite(s.w) && Number.isFinite(s.h)) return { ...clampSize(s.w, s.h), host };
+  return { w: 960, h: 720, host };
+}
+
+function trackPopup(win, host) {
+  if (!win || win.id == null || !host) return;
+  trackedPopups.set(win.id, {
+    host,
+    lastW: win.width,
+    lastH: win.height,
+    timer: null
+  });
+}
+
+async function saveWindowSize(host, w, h) {
+  const size = clampSize(w, h);
+  const stored = await chrome.storage.local.get({ winSizes: {} });
+  const map = Object.assign({}, stored.winSizes && typeof stored.winSizes === 'object' ? stored.winSizes : {});
+  map[host] = { w: size.w, h: size.h, at: Date.now() };
+
+  const keys = Object.keys(map);
+  if (keys.length > WIN_SIZE_LIMIT) {
+    keys
+      .sort((a, b) => (map[a].at || 0) - (map[b].at || 0))
+      .slice(0, keys.length - WIN_SIZE_LIMIT)
+      .forEach((k) => delete map[k]);
+  }
+  try {
+    await chrome.storage.local.set({ winSizes: map });
+  } catch (e) {}
+}
+
+chrome.windows.onBoundsChanged.addListener((win) => {
+  if (!win || win.id == null) return;
+  const rec = trackedPopups.get(win.id);
+  if (!rec) return;
+  if (!Number.isFinite(win.width) || !Number.isFinite(win.height)) return;
+  if (win.width === rec.lastW && win.height === rec.lastH) return;
+  rec.lastW = win.width;
+  rec.lastH = win.height;
+  clearTimeout(rec.timer);
+  rec.timer = setTimeout(() => {
+    if (trackedPopups.get(win.id) === rec) saveWindowSize(rec.host, win.width, win.height);
+  }, 700);
+});
+
+chrome.windows.onRemoved.addListener((windowId) => {
+  const rec = trackedPopups.get(windowId);
+  if (rec) clearTimeout(rec.timer);
+  trackedPopups.delete(windowId);
+});
+
 async function openPopupWindow(url, rect) {
   if (!/^https?:\/\//i.test(url || '')) return;
-  const width = 960;
-  const height = 720;
+  let stored = { winSizes: {} };
+  try {
+    stored = await chrome.storage.local.get({ winSizes: {} });
+  } catch (e) {}
+  const size = popupSizeFor(stored.winSizes, url);
+  const width = size.w;
+  const height = size.h;
   const data = { url, type: 'popup', width, height, focused: true };
 
   try {
@@ -127,15 +220,117 @@ async function openPopupWindow(url, rect) {
   }
 
   try {
-    await chrome.windows.create(data);
+    const win = await chrome.windows.create(data);
+    trackPopup(win, size.host);
   } catch (e) {
     try {
-      await chrome.windows.create({ url, type: 'popup', width, height });
+      const win = await chrome.windows.create({ url, type: 'popup', width, height });
+      trackPopup(win, size.host);
     } catch (e2) {
       console.warn('[Peek] 创建小窗失败', e2);
     }
   }
 }
+
+/* ---------- 自动把新标签页转成小窗 ---------- */
+
+const autoConverted = new Set();
+const autoBusy = new Set();
+let autoPopupOn = null;
+
+async function autoPopupEnabled() {
+  if (autoPopupOn !== null) return autoPopupOn;
+  try {
+    const stored = await chrome.storage.local.get({ autoPopupTabs: false });
+    autoPopupOn = !!stored.autoPopupTabs;
+  } catch (e) {
+    autoPopupOn = false;
+  }
+  return autoPopupOn;
+}
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'local' || !changes.autoPopupTabs) return;
+  autoPopupOn = !!changes.autoPopupTabs.newValue;
+});
+
+function siteMode(rules, host) {
+  if (!rules || typeof rules !== 'object') return null;
+  const valid = (v) => v === 'window' || v === 'iframe' || v === 'off';
+  const key = String(host || '').toLowerCase().replace(/^www\./, '');
+  if (!key) return null;
+  const clean = (s) => String(s || '').trim().toLowerCase().replace(/^www\./, '');
+  if (valid(rules[key])) return rules[key];
+
+  let wildcard = null;
+  let wildcardLen = -1;
+  for (const raw of Object.keys(rules)) {
+    if (!valid(rules[raw])) continue;
+    const k = clean(raw);
+    if (k.slice(0, 2) !== '*.') continue;
+    const suffix = k.slice(2);
+    if (!suffix || key === suffix) continue;
+    if (key.length > suffix.length && key.slice(-suffix.length - 1) === '.' + suffix && suffix.length > wildcardLen) {
+      wildcard = rules[raw];
+      wildcardLen = suffix.length;
+    }
+  }
+  if (wildcard) return wildcard;
+
+  if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(key)) {
+    const labels = key.split('.');
+    for (let i = 1; i < labels.length - 1; i++) {
+      const parent = labels.slice(i).join('.');
+      if (valid(rules[parent])) return rules[parent];
+    }
+  }
+  return null;
+}
+
+async function considerAutoPopup(tab) {
+  if (!tab || tab.id == null || tab.openerTabId == null) return;
+  if (autoConverted.has(tab.id) || autoBusy.has(tab.id)) return;
+  if (!(await autoPopupEnabled())) return;
+  const url = tab.pendingUrl || tab.url || '';
+  if (!url) return;
+
+  autoBusy.add(tab.id);
+  try {
+    if (autoConverted.has(tab.id)) return;
+    if (!/^https?:\/\//i.test(url)) return;
+    const host = hostKeyOf(url);
+    if (!host) return;
+    const stored = await chrome.storage.local.get({ siteRules: {}, winSizes: {} });
+    if (siteMode(stored.siteRules, host) === 'off') return;
+
+    autoConverted.add(tab.id);
+    const size = popupSizeFor(stored.winSizes, url);
+    try {
+      const win = await chrome.windows.create({
+        tabId: tab.id,
+        type: 'popup',
+        width: size.w,
+        height: size.h,
+        focused: true
+      });
+      trackPopup(win, size.host);
+    } catch (e) {
+      autoConverted.delete(tab.id);
+      console.warn('[Peek] 自动转小窗失败', e);
+    }
+  } finally {
+    autoBusy.delete(tab.id);
+  }
+}
+
+chrome.tabs.onCreated.addListener((tab) => {
+  considerAutoPopup(tab);
+});
+
+chrome.tabs.onUpdated.addListener((tabId, info, tab) => {
+  if (!info.url && !info.status) return;
+  considerAutoPopup(tab);
+});
 
 /* ---------- 阅读模式：借 offscreen 页面跑 Readability ---------- */
 
@@ -166,6 +361,103 @@ async function runExtract(msg, reply) {
   } catch (e) {
     reply({ ok: false, error: '解析器没有响应' });
   }
+}
+
+/* ---------- AI 问答：OpenAI 兼容接口 ---------- */
+
+function aiTextOf(data) {
+  if (!data || typeof data !== 'object') return '';
+  const choice = Array.isArray(data.choices) ? data.choices[0] : null;
+  const content = choice && (choice.message ? choice.message.content : choice.text);
+  if (typeof content === 'string') return content;
+  if (Array.isArray(content)) {
+    return content
+      .map((part) => (part && typeof part.text === 'string' ? part.text : ''))
+      .filter(Boolean)
+      .join('\n');
+  }
+  if (typeof data.output_text === 'string') return data.output_text;
+  if (typeof data.response === 'string') return data.response;
+  return '';
+}
+
+async function runAi(msg, reply) {
+  let settings;
+  try {
+    settings = await chrome.storage.local.get(DEFAULTS);
+  } catch (e) {
+    return reply({ ok: false, error: '读不到设置' });
+  }
+  if (!settings.aiEnabled) return reply({ ok: false, error: 'AI 问答没有启用' });
+
+  const endpoint = String(settings.aiEndpoint || '').trim();
+  const model = String(settings.aiModel || '').trim();
+  const key = String(settings.aiKey || '').trim();
+  if (!/^https?:\/\//i.test(endpoint)) return reply({ ok: false, error: '接口地址不是有效的 http(s) URL' });
+  if (!model) return reply({ ok: false, error: '还没填模型名' });
+
+  const question = String(msg.question || '').trim().slice(0, 4000);
+  if (!question) return reply({ ok: false, error: '问题是空的' });
+
+  const pageText = String(msg.pageText || '').slice(0, 16000);
+  const pageTitle = String(msg.pageTitle || '').slice(0, 200);
+  const pageUrl = String(msg.pageUrl || '').slice(0, 1000);
+  const base =
+    String(settings.aiPrompt || '').trim() ||
+    '你是一个阅读助手。只依据用户提供的网页内容回答，内容里没有的信息要直接说明没读到，不要编造。回答使用简体中文，简洁、分点。';
+
+  const system = [
+    base,
+    '',
+    '页面标题：' + (pageTitle || '（未知）'),
+    '页面地址：' + (pageUrl || '（未知）'),
+    '页面正文：',
+    pageText ? pageText : '（没有取到正文。请仅根据标题和网址回答，并说明你没能读到页面内容。）'
+  ].join('\n');
+
+  const messages = [{ role: 'system', content: system }];
+  if (Array.isArray(msg.history)) {
+    msg.history.slice(-AI_HISTORY_MESSAGES).forEach((m) => {
+      if (!m || (m.role !== 'user' && m.role !== 'assistant')) return;
+      const content = String(m.content || '').slice(0, 4000);
+      if (content) messages.push({ role: m.role, content });
+    });
+  }
+  messages.push({ role: 'user', content: question });
+
+  const headers = { 'Content-Type': 'application/json' };
+  if (key) headers.Authorization = 'Bearer ' + key;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 45000);
+  let res;
+  try {
+    res = await fetch(endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ model, messages, temperature: 0.3, stream: false }),
+      signal: controller.signal
+    });
+  } catch (e) {
+    clearTimeout(timer);
+    return reply({ ok: false, error: controller.signal.aborted ? '请求超时（45 秒）' : '连不上接口：' + String((e && e.message) || e) });
+  }
+  clearTimeout(timer);
+
+  const raw = await res.text().catch(() => '');
+  let data = null;
+  try {
+    data = raw ? JSON.parse(raw) : null;
+  } catch (e) {}
+
+  if (!res.ok) {
+    const detail =
+      (data && data.error && (data.error.message || data.error.type)) || String(raw || '').replace(/\s+/g, ' ').slice(0, 240);
+    return reply({ ok: false, error: '接口返回 HTTP ' + res.status + (detail ? '：' + detail : '') });
+  }
+  const text = aiTextOf(data).trim();
+  if (!text) return reply({ ok: false, error: '接口返回了无法识别的内容，确认它兼容 OpenAI Chat Completions' });
+  reply({ ok: true, text: text.slice(0, 20000) });
 }
 
 /* ---------- 右键菜单 ---------- */
@@ -206,7 +498,8 @@ chrome.runtime.onStartup.addListener(buildMenus);
 /* 发给某个 tab 的指定 frame。all_frames 打开后，不带 frameId 会让
  * 每个内嵌 frame 的内容脚本都执行一遍，必须精确投递。 */
 function sendToFrame(tabId, frameId, msg) {
-  const opt = frameId != null && frameId > 0 ? { frameId } : undefined;
+  // frameId 0 也表示顶层 frame；不能省略参数，否则会广播到所有 iframe。
+  const opt = { frameId: Number.isInteger(frameId) ? frameId : 0 };
   return chrome.tabs.sendMessage(tabId, msg, opt).catch(() => null);
 }
 
@@ -225,11 +518,19 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     } catch (e) {}
     if (!host) return;
     const stored = await chrome.storage.local.get({ siteRules: {} });
-    const next = Object.assign({}, stored.siteRules || {});
+    const rules = stored.siteRules || {};
+    const prev = rules[host] === 'window' || rules[host] === 'iframe' || rules[host] === 'off' ? rules[host] : null;
+    const next = Object.assign({}, rules);
     next[host] = 'off';
     await chrome.storage.local.set({ siteRules: next });
-    // 让已经开着的浮层立刻让位
-    if (tab && tab.id != null) sendToFrame(tab.id, info.frameId, { type: 'peek:sync-rules' });
+    // 已开着的浮层由 content 的 storage.onChanged 同步设置；这里给一次反悔机会
+    if (tab && tab.id != null) {
+      sendToFrame(tab.id, info.frameId, {
+        type: 'peek:notice',
+        text: '已在此网站停用 Peek',
+        undo: { host, prev }
+      });
+    }
     return;
   }
 
@@ -285,6 +586,11 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
     return true;
   }
 
+  if (msg.type === 'peek:ai') {
+    runAi(msg, reply);
+    return true;
+  }
+
   if (msg.type === 'peek:open-window') {
     openPopupWindow(msg.url, msg.rect).then(() => reply({ ok: true }));
     return true;
@@ -296,6 +602,8 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
 chrome.tabs.onRemoved.addListener((tabId) => {
   clearTimeout(pendingRelease.get(tabId));
   pendingRelease.delete(tabId);
+  autoConverted.delete(tabId);
+  autoBusy.delete(tabId);
   removeTabRule(tabId);
 });
 

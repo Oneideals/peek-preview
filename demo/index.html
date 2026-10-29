@@ -30,6 +30,13 @@
     padding: 16px 18px; margin-bottom: 28px; font-size: 13px; line-height: 1.9; color: var(--muted);
   }
   .tip b { color: var(--text); font-weight: 600; }
+  .pick {
+    border: 1px dashed var(--line); border-radius: 12px; padding: 16px 18px;
+    margin-bottom: 32px; font-size: 14.5px; line-height: 1.9;
+  }
+  .pick p { margin: 0 0 8px; }
+  .pick p:last-child { margin-bottom: 0; }
+  .pick b { font-weight: 600; }
   kbd {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px;
     background: var(--bg); border: 1px solid var(--line); border-bottom-width: 2px;
@@ -53,12 +60,40 @@
 <body>
 <div class="wrap">
   <h1>Peek 测试台</h1>
-  <p class="sub">用来验证悬浮预览在各种站点上的表现。</p>
+  <p class="sub">用来验证悬浮预览、划词搜索 / 翻译、图片查看器、阅读视图与 AI 问答，以及各种站点的嵌入表现。</p>
 
   <div class="tip">
     <b>用法</b>：按住 <kbd>Shift</kbd> 点击下面任意链接 —— 内容会浮在本页上方。<br>
+    选中一段文字，上方会浮出「搜索 / 翻译」工具条；把选中的文字拖到空白处松手，也能直接搜索。<br>
     <kbd>Esc</kbd> 或点击浮层外侧关闭 · 顶部按钮可停靠右侧、转独立小窗、或丢到新标签页 · 拖动标题栏移动，拖右下角缩放。<br>
-    也可以<b>把链接拖到页面空白处</b>直接开浮层 · <kbd>Ctrl</kbd>+<kbd>右键</kbd>收藏链接 · <kbd>Alt</kbd>+<kbd>U</kbd> 唤出收藏夹。
+    也可以<b>把链接拖到页面空白处</b>直接开浮层 · <kbd>Ctrl</kbd>+<kbd>右键</kbd>收藏链接 · <kbd>Alt</kbd>+<kbd>U</kbd> 唤出收藏夹。<br>
+    多个浮层会自动并排，<kbd>Tab</kbd> 切焦点、标题栏 ← / → 交换位置；「沉浸」把浮层铺满屏幕，<kbd>Alt</kbd>+<kbd>R</kbd> 切阅读视图。
+  </div>
+
+  <h2>划词搜索 / 翻译</h2>
+  <div class="pick">
+    <p>选中这句话里的任意片段，上方会浮出<b>搜索 / 翻译</b>工具条；点击按钮，结果同样在本页浮层里打开，不会新开标签页。</p>
+    <p>也可以把选中的文字<b>拖到页面空白处</b>松手，直接打开搜索结果。搜索引擎、翻译服务和目标语言都能在扩展设置里切换。</p>
+  </div>
+
+  <h2>本地素材（不联网也能验 0.5 的功能）</h2>
+  <div class="grid">
+    <a class="item" href="article.html">
+      <div class="name">长文章 <span class="badge">阅读视图 / AI 问答</span></div>
+      <div class="url">article.html · 带代码块、表格和脚注锚点</div>
+    </a>
+    <a class="item" href="scene.svg">
+      <div class="name">矢量图 <span class="badge">图片查看器</span></div>
+      <div class="url">scene.svg · 滚轮缩放、拖拽平移、双击放大</div>
+    </a>
+    <a class="item" href="anim.gif">
+      <div class="name">动图 <span class="badge">GIF 冻结</span></div>
+      <div class="url">anim.gif · 底部「暂停 GIF」停在当前帧</div>
+    </a>
+    <a class="item" href="photo.png">
+      <div class="name">位图 <span class="badge">缩放 / 适应</span></div>
+      <div class="url">photo.png · 100%–800%，「适应」回原尺寸</div>
+    </a>
   </div>
 
   <h2>iframe 里的链接（验证 all_frames）</h2>

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-label="Peek 图片查看器示例图">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b1035"/>
+      <stop offset="0.55" stop-color="#5b4fd6"/>
+      <stop offset="1" stop-color="#f0a86b"/>
+    </linearGradient>
+    <linearGradient id="ridge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a1b4d"/>
+      <stop offset="1" stop-color="#140b26"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffe9c9" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#ffe9c9" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="800" fill="url(#sky)"/>
+  <circle cx="880" cy="250" r="230" fill="url(#glow)"/>
+  <circle cx="880" cy="250" r="86" fill="#fff3d6"/>
+
+  <g fill="#ffffff" opacity="0.85">
+    <circle cx="120" cy="90" r="2.4"/><circle cx="260" cy="150" r="1.8"/>
+    <circle cx="380" cy="70" r="2.2"/><circle cx="520" cy="180" r="1.6"/>
+    <circle cx="700" cy="110" r="2"/><circle cx="1040" cy="80" r="1.9"/>
+    <circle cx="1140" cy="190" r="2.3"/><circle cx="180" cy="270" r="1.5"/>
+    <circle cx="640" cy="40" r="1.7"/><circle cx="960" cy="140" r="1.4"/>
+  </g>
+
+  <path d="M0 560 L200 420 L340 520 L520 360 L700 500 L860 420 L1020 540 L1200 470 L1200 800 L0 800 Z" fill="url(#ridge)"/>
+  <path d="M0 660 L160 580 L320 650 L520 540 L740 640 L920 570 L1200 660 L1200 800 L0 800 Z" fill="#0d0620"/>
+
+  <g stroke="#ffd9a0" stroke-width="3" opacity="0.55" fill="none">
+    <path d="M60 720 Q300 700 560 726 T1140 716"/>
+    <path d="M60 750 Q320 734 580 756 T1140 748"/>
+  </g>
+
+  <text x="72" y="676" font-family="-apple-system, Helvetica, sans-serif" font-size="54" font-weight="600" fill="#ffffff">Peek 图片查看器</text>
+  <text x="74" y="728" font-family="-apple-system, Helvetica, sans-serif" font-size="26" fill="#e8dfc9">滚轮缩放 · 双击放大 · 拖拽平移 · 一键适应</text>
+</svg>
