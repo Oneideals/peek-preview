@@ -1,0 +1,8 @@
+.DS_Store
+Thumbs.db
+node_modules/
+*.zip
+*.log
+
+# 本地调研与规划，不进入公开仓库
+调研与规划.md

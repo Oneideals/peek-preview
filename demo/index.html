@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Peek 测试台</title>
+<style>
+  :root {
+    --bg: #fbfbfd;
+    --card: #fff;
+    --text: #17171b;
+    --muted: #86868f;
+    --line: rgba(0,0,0,.09);
+    --accent: #5b4fd6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#111114; --card:#1c1c20; --text:#f1f1f4; --muted:#8b8b96; --line:rgba(255,255,255,.1); --accent:#a99cff; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 56px 28px 80px; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; }
+  h1 { font-size: 26px; font-weight: 600; margin: 0 0 6px; letter-spacing: -.3px; }
+  .sub { color: var(--muted); font-size: 14px; margin: 0 0 28px; }
+  .tip {
+    border: 1px solid var(--line); background: var(--card); border-radius: 12px;
+    padding: 16px 18px; margin-bottom: 28px; font-size: 13px; line-height: 1.9; color: var(--muted);
+  }
+  .tip b { color: var(--text); font-weight: 600; }
+  kbd {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px;
+    background: var(--bg); border: 1px solid var(--line); border-bottom-width: 2px;
+    border-radius: 5px; padding: 1px 5px; color: var(--text);
+  }
+  h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin: 0 0 12px; font-weight: 600; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin-bottom: 32px; }
+  a.item {
+    display: block; padding: 14px 16px; background: var(--card); border: 1px solid var(--line);
+    border-radius: 10px; text-decoration: none; color: var(--text); transition: border-color .15s, transform .15s;
+  }
+  a.item:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .name { font-size: 13.5px; font-weight: 500; margin-bottom: 3px; }
+  .url { font-size: 11.5px; color: var(--muted); word-break: break-all; }
+  .badge {
+    display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 4px;
+    background: rgba(91,79,214,.12); color: var(--accent); margin-left: 6px; vertical-align: 1px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Peek 测试台</h1>
+  <p class="sub">用来验证悬浮预览在各种站点上的表现。</p>
+
+  <div class="tip">
+    <b>用法</b>：按住 <kbd>Shift</kbd> 点击下面任意链接 —— 内容会浮在本页上方。<br>
+    <kbd>Esc</kbd> 或点击浮层外侧关闭 · 顶部按钮可停靠右侧、转独立小窗、或丢到新标签页 · 拖动标题栏移动，拖右下角缩放。<br>
+    也可以<b>把链接拖到页面空白处</b>直接开浮层 · <kbd>Ctrl</kbd>+<kbd>右键</kbd>收藏链接 · <kbd>Alt</kbd>+<kbd>U</kbd> 唤出收藏夹。
+  </div>
+
+  <h2>iframe 里的链接（验证 all_frames）</h2>
+  <div class="grid" style="grid-template-columns:1fr">
+    <iframe src="demo-inner.html" title="内嵌测试页"
+      style="width:100%;height:190px;border:1px solid var(--line);border-radius:10px;background:var(--card)"></iframe>
+  </div>
+
+  <h2>常规站点（能被嵌入）</h2>
+  <div class="grid">
+    <a class="item" href="https://developer.mozilla.org/zh-CN/docs/Web/API/Window/postMessage">
+      <div class="name">MDN · postMessage</div>
+      <div class="url">developer.mozilla.org</div>
+    </a>
+    <a class="item" href="https://github.com/u-Sir/peek-pop">
+      <div class="name">GitHub · peek-pop</div>
+      <div class="url">github.com</div>
+    </a>
+    <a class="item" href="https://www.wikipedia.org/">
+      <div class="name">Wikipedia</div>
+      <div class="url">wikipedia.org</div>
+    </a>
+    <a class="item" href="https://www.thepaper.cn/">
+      <div class="name">澎湃新闻</div>
+      <div class="url">thepaper.cn</div>
+    </a>
+    <a class="item" href="https://sspai.com/">
+      <div class="name">少数派</div>
+      <div class="url">sspai.com</div>
+    </a>
+    <a class="item" href="https://news.ycombinator.com/">
+      <div class="name">Hacker News</div>
+      <div class="url">news.ycombinator.com</div>
+    </a>
+  </div>
+
+  <h2>高难度站点（会被拒绝嵌入，用来验证兜底）</h2>
+  <div class="grid">
+    <a class="item" href="https://www.google.com/">
+      <div class="name">Google <span class="badge">X-Frame-Options</span></div>
+      <div class="url">google.com</div>
+    </a>
+    <a class="item" href="https://www.zhihu.com/">
+      <div class="name">知乎 <span class="badge">CSP</span></div>
+      <div class="url">zhihu.com</div>
+    </a>
+    <a class="item" href="https://www.bilibili.com/">
+      <div class="name">哔哩哔哩 <span class="badge">可能跳出</span></div>
+      <div class="url">bilibili.com</div>
+    </a>
+    <a class="item" href="https://x.com/">
+      <div class="name">X <span class="badge">CSP</span></div>
+      <div class="url">x.com</div>
+    </a>
+  </div>
+
+  <p class="sub" style="margin:0;font-size:12.5px">
+    高难度站点如果显示「这个页面没能嵌进来」，点浮层里的「用独立小窗打开」应该能正常访问 —— 这条兜底路径和 Arc 的 Little Arc 是一回事。
+  </p>
+</div>
+</body>
+</html>

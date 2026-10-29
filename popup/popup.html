@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Peek 设置</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="hd">
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="30" height="30">
+          <rect x="1" y="1" width="30" height="30" rx="8" fill="#5b4fd6"/>
+          <rect x="7.5" y="8" width="12.5" height="11.5" rx="3" fill="none" stroke="#fff" stroke-width="2" opacity=".75"/>
+          <rect x="13" y="13.5" width="12" height="11" rx="3" fill="#fff"/>
+        </svg>
+      </div>
+      <div class="ttl">
+        <strong>Peek</strong>
+        <span>链接悬浮预览</span>
+      </div>
+      <span class="ver">0.3</span>
+    </header>
+
+    <section>
+      <h2>触发方式</h2>
+      <label class="row">
+        <span>Shift + 点击</span>
+        <input type="checkbox" data-k="triggerShift">
+      </label>
+      <label class="row">
+        <span>Alt + 点击</span>
+        <input type="checkbox" data-k="triggerAlt">
+      </label>
+      <label class="row">
+        <span>鼠标中键</span>
+        <input type="checkbox" data-k="triggerMiddle">
+      </label>
+      <label class="row">
+        <span>双击链接</span>
+        <input type="checkbox" data-k="triggerDouble">
+      </label>
+      <label class="row">
+        <span>悬停即预览<em>停 0.45 秒后弹出</em></span>
+        <input type="checkbox" data-k="triggerHover">
+      </label>
+      <label class="row">
+        <span>拖拽链接到空白处<em>落点即开浮层</em></span>
+        <input type="checkbox" data-k="triggerDrag">
+      </label>
+      <p class="hint">拖到输入框、按钮或另一段文字上时不拦截，保留浏览器原有行为。</p>
+    </section>
+
+    <section>
+      <h2>打开方式</h2>
+      <div class="seg" id="mode">
+        <button type="button" data-mode="iframe">页内悬浮</button>
+        <button type="button" data-mode="window">独立小窗</button>
+      </div>
+      <p class="hint" id="modeHint"></p>
+      <label class="row">
+        <span>默认用阅读视图打开<em>抽正文重排</em></span>
+        <input type="checkbox" data-k="readingDefault">
+      </label>
+      <label class="row">
+        <span>自动降级<em>嵌不进来就改开小窗</em></span>
+        <input type="checkbox" data-k="autoRoute">
+      </label>
+    </section>
+
+    <section>
+      <h2>站点规则</h2>
+      <div id="rules" class="rules"></div>
+      <div class="rule-add">
+        <input type="text" id="ruleHost" placeholder="example.com" spellcheck="false" autocomplete="off">
+        <select class="rule-sel" id="ruleMode" aria-label="规则类型">
+          <option value="iframe">浮层</option>
+          <option value="window" selected>小窗</option>
+          <option value="off">停用</option>
+        </select>
+        <button type="button" id="ruleAdd">添加</button>
+      </div>
+      <p class="hint"><b>浮层</b>强制嵌入、<b>小窗</b>强制独立窗口、<b>停用</b>让点击完全交给浏览器。自动降级的站点会记成「小窗」，右键菜单也能一键停用当前网站。</p>
+    </section>
+
+    <section>
+      <h2>外观与行为</h2>
+      <div class="row">
+        <span>默认尺寸</span>
+        <span class="nums">
+          <input type="number" data-k="width" min="360" max="1600" step="10" aria-label="宽度">
+          <i>×</i>
+          <input type="number" data-k="height" min="240" max="1200" step="10" aria-label="高度">
+        </span>
+      </div>
+      <label class="row">
+        <span>点击外部关闭</span>
+        <input type="checkbox" data-k="closeOnOutside">
+      </label>
+      <label class="row">
+        <span>背景变暗</span>
+        <input type="checkbox" data-k="dim">
+      </label>
+      <div class="row">
+        <span>主题</span>
+        <div class="seg tiny" id="theme">
+          <button type="button" data-theme="auto">自动</button>
+          <button type="button" data-theme="light">浅色</button>
+          <button type="button" data-theme="dark">深色</button>
+        </div>
+      </div>
+      <div class="row">
+        <span>最多并排<em>超出会挤掉最早的</em></span>
+        <div class="seg tiny" id="maxPeek">
+          <button type="button" data-max="2">2</button>
+          <button type="button" data-max="3">3</button>
+          <button type="button" data-max="4">4</button>
+        </div>
+      </div>
+    </section>
+
+    <footer class="ft">
+      <div class="ft-l">
+        <button type="button" id="favOpen">收藏夹 <em id="favCount">0</em></button>
+        <button type="button" id="reset">恢复默认</button>
+      </div>
+      <span class="tip">Alt + U 唤出收藏夹</span>
+    </footer>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

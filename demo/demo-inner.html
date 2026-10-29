@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>iframe 内测试页</title>
+<style>
+  :root { --bg:#fff; --text:#17171b; --muted:#86868f; --line:rgba(0,0,0,.09); --accent:#5b4fd6; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#1c1c20; --text:#f1f1f4; --muted:#8b8b96; --line:rgba(255,255,255,.1); --accent:#a99cff; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 20px 22px; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; font-size: 13px;
+  }
+  p { margin: 0 0 12px; color: var(--muted); }
+  a {
+    display: inline-block; margin: 0 8px 8px 0; padding: 9px 13px; background: var(--bg);
+    border: 1px solid var(--line); border-radius: 8px; color: var(--accent);
+    text-decoration: none; font-size: 12.5px;
+  }
+  a:hover { border-color: var(--accent); }
+</style>
+</head>
+<body>
+  <p>这是一个嵌在测试台里的 iframe。<b>Shift + 点击</b>下面的链接，浮层会开在 iframe 自己里面。</p>
+  <a href="https://developer.mozilla.org/zh-CN/docs/Web/API/HTMLIFrameElement">MDN · iframe</a>
+  <a href="https://en.wikipedia.org/wiki/Inline_frame">Wikipedia · Inline frame</a>
+</body>
+</html>
