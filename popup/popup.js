@@ -57,6 +57,19 @@ function save(patch) {
   chrome.storage.local.set(patch);
 }
 
+function showTab(name) {
+  const tabs = $$('.tab');
+  if (!tabs.length) return;
+  tabs.forEach((tab) => {
+    const on = tab.dataset.tab === name;
+    tab.classList.toggle('on', on);
+    tab.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  $$('section[data-panel]').forEach((sec) => {
+    sec.hidden = sec.dataset.panel !== name;
+  });
+}
+
 function render() {
   $$('input[type="checkbox"][data-k]').forEach((el) => {
     el.checked = Boolean(state[el.dataset.k]);
@@ -601,6 +614,11 @@ function bind() {
       importConfigFile(file);
     });
   }
+
+  $$('.tab').forEach((tab) => {
+    tab.addEventListener('click', () => showTab(tab.dataset.tab));
+  });
+  showTab('general');
 
   $('#reset').addEventListener('click', () => {
     state = { ...DEFAULTS };

@@ -9,9 +9,15 @@
   <div class="wrap">
     <header class="hd">
       <div class="logo" aria-hidden="true">
-        <svg viewBox="0 0 32 32" width="30" height="30">
-          <rect x="1" y="1" width="30" height="30" rx="8" fill="#5b4fd6"/>
-          <rect x="7.5" y="8" width="12.5" height="11.5" rx="3" fill="none" stroke="#fff" stroke-width="2" opacity=".75"/>
+        <svg viewBox="0 0 32 32" width="32" height="32">
+          <defs>
+            <linearGradient id="peekLogo" x1="3" y1="1" x2="30" y2="32" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#7A66FF"/>
+              <stop offset="1" stop-color="#B85CFF"/>
+            </linearGradient>
+          </defs>
+          <rect x="1" y="1" width="30" height="30" rx="9" fill="url(#peekLogo)"/>
+          <rect x="7.5" y="8" width="12.5" height="11.5" rx="3" fill="none" stroke="#fff" stroke-width="2" opacity=".72"/>
           <rect x="13" y="13.5" width="12" height="11" rx="3" fill="#fff"/>
         </svg>
       </div>
@@ -22,7 +28,14 @@
       <span class="ver">0.5</span>
     </header>
 
-    <section>
+    <nav class="tabs" role="tablist" aria-label="设置分类">
+      <button type="button" class="tab on" data-tab="general" role="tab" aria-selected="true">触发</button>
+      <button type="button" class="tab" data-tab="reading" role="tab" aria-selected="false">阅读</button>
+      <button type="button" class="tab" data-tab="ai" role="tab" aria-selected="false">AI</button>
+      <button type="button" class="tab" data-tab="site" role="tab" aria-selected="false">站点</button>
+    </nav>
+
+    <section data-panel="general">
       <h2>当前页快捷操作</h2>
       <div class="quick">
         <button type="button" id="qSearch">搜索页标题</button>
@@ -32,7 +45,7 @@
       <p class="hint" id="quickHint">正在读取当前标签页…</p>
     </section>
 
-    <section>
+    <section data-panel="general">
       <h2>触发方式</h2>
       <label class="row">
         <span>Shift + 点击</span>
@@ -61,7 +74,7 @@
       <p class="hint">拖到输入框、按钮或另一段文字上时不拦截，保留浏览器原有行为。</p>
     </section>
 
-    <section>
+    <section data-panel="reading" hidden>
       <h2>划词工具</h2>
       <label class="row">
         <span>选中文字时弹出工具条<em>搜索 / 翻译</em></span>
@@ -100,7 +113,7 @@
       <p class="hint">工具条浮在选区上方；搜索和翻译结果同样在浮层里打开，嵌不进来会自动改走小窗。</p>
     </section>
 
-    <section>
+    <section data-panel="general">
       <h2>打开方式</h2>
       <div class="seg" id="mode">
         <button type="button" data-mode="iframe">页内悬浮</button>
@@ -122,7 +135,7 @@
       <p class="hint">开启后，Ctrl / Shift / 中键点击链接新开的标签页会被移进独立小窗；地址栏直接新建的标签不受影响。小窗尺寸按站点记住。</p>
     </section>
 
-    <section>
+    <section data-panel="ai" hidden>
       <h2>AI 问答</h2>
       <label class="row">
         <span>启用 AI 问答<em>自带 Key，直连接口</em></span>
@@ -150,7 +163,7 @@
       <p class="hint">只有在你点击浮层里的“发送”时，才会把当前页面正文和问题发到你填写的接口；扩展本身不上传任何数据。</p>
     </section>
 
-    <section>
+    <section data-panel="site" hidden>
       <h2>站点规则</h2>
       <div id="rules" class="rules"></div>
       <div class="rule-add">
@@ -165,7 +178,7 @@
       <p class="hint"><b>浮层</b>强制嵌入、<b>小窗</b>强制独立窗口、<b>停用</b>让点击完全交给浏览器。规则按主机名后缀匹配：<b>example.com</b> 连同子域生效，<b>*.example.com</b> 只算子域。自动降级会记成「小窗」，提示条上可直接撤销；右键菜单也能一键停用当前网站。</p>
     </section>
 
-    <section>
+    <section data-panel="reading" hidden>
       <h2>外观与行为</h2>
       <div class="row">
         <span>默认尺寸<em>没记过尺寸时使用</em></span>
@@ -210,7 +223,7 @@
       </div>
     </section>
 
-    <section>
+    <section data-panel="site" hidden>
       <h2>数据</h2>
       <div class="row">
         <span>配置备份<em>设置、站点规则与收藏夹</em></span>
